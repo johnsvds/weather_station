@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 import urllib.request
 import json
 from models import Weather_data
-import schedule
+#import schedule
 import sqlite3 as lite
 import time
 

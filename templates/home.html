@@ -85,15 +85,4 @@
         }
   </script>
 
-  <script>
-    let timerId = setInterval(() => {
-      var xmlHttp = new XMLHttpRequest();
-      xmlHttp.open( "GET", "/station/ucy", false );
-      xmlHttp.send( null );
-      return xmlHttp.responseText;
-
-    }, 50000);
-  </script>
-
-
 {% endblock %}
