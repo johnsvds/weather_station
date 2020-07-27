@@ -1,0 +1,8 @@
+typing
+fastapi
+urllib
+sqlalchemy
+jinja2
+uvicorn
+urllib
+time
