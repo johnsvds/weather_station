@@ -14,7 +14,6 @@
   <table class="table">
       <thead>
         <tr>
-          <th scope="col">#</th>
           <th scope="col">timestamp</th>
           <th scope="col">neighborhood</th>
           <th scope="col">humidity</th>
@@ -26,7 +25,6 @@
       <tbody>
         {% for datum in data %}
         <tr>
-          <th scope="row">{{ datum.id }}</th>
           <td>{{ datum.timestamp }}</td>
           <td>{{ datum.neighborhood }}</td>
           <td>{{ datum.humidity }}</td>
@@ -47,8 +45,6 @@
       temperatures['{{datum.timestamp}}'] = '{{datum.temperature}}'  
     '{%- endfor %}'
     console.log(temperatures)
-
-
 
     google.charts.load('current', {packages: ['corechart', 'line']});
     google.charts.setOnLoadCallback(drawCurveTypes);

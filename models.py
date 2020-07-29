@@ -13,3 +13,10 @@ class Weather_data(Base):
     heatIndex = Column(Numeric(3,2))
     windSpeed = Column(Numeric(3,2))
 
+class Station(Base):
+    __tablename__ = "station"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True)
+    url = Column(String)
+    neighborhood = Column(String)

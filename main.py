@@ -7,12 +7,10 @@ from sqlalchemy.orm import Session
 import urllib.request
 import json
 from models import Weather_data
-#import schedule
 import sqlite3 as lite
 import time
-
-KAIMAKLI = "https://api.weather.com/v2/pws/observations/current?apiKey=6532d6454b8aa370768e63d6ba5a832e&stationId=INICOSIA31&numericPrecision=decimal&format=json&units=e"
-UCY = "https://api.weather.com/v2/pws/observations/current?apiKey=6532d6454b8aa370768e63d6ba5a832e&stationId=IAGLANDJ2&numericPrecision=decimal&format=json&units=e"
+import argparse
+import asyncio
 
 def fahrenheit_to_celsius(tempF):
     return (tempF - 32) * 5/9
@@ -28,6 +26,15 @@ def get_db():
         yield db
     finally:
         db.close()
+
+def get_stations():
+    db = SessionLocal()
+    station_list = {}
+    stations =  db.query(models.Station).all()
+    for station in stations:
+        station_list[station.name] = [station.url, station.neighborhood]
+    return station_list
+
 
 def fetch_weather_data(db, link, weather):
     contents = json.loads(urllib.request.urlopen(link).read())
@@ -49,39 +56,54 @@ def fetch_weather_data(db, link, weather):
     weather.temperature = data["imperial"]["temp"]
     weather.heatIndex = data["imperial"]["heatIndex"]
 
+    print(weather.timestamp)
+
     db.add(weather)
     db.commit()
+    data = db.query(models.Weather_data).order_by(models.Weather_data.id.desc()).filter_by(neighborhood = "University of Cyprus").limit(2)
+    # print(data)
+      
 
-
-@app.get("/station/{station_name}")
-async def read_station_weather(station_name: str,  background_tasks: BackgroundTasks ,  db: Session = Depends(get_db)):
-
-    weather = Weather_data()
-    link = UCY
-    if station_name == "kaimakli":
-        link = KAIMAKLI 
-    elif station_name == "ucy":
-        link =  UCY
+def read_station_weather(db):
+    stations = get_stations()
+    for station in stations:
+        print(stations[station][0])
+        weather = Weather_data()
+        fetch_weather_data(db, stations[station][0], weather)
    
-    background_tasks.add_task(fetch_weather_data, db, link, weather)
 
-    
+def controller(args, db):
+    if args.get:
+        read_station_weather(db)
 
-
+def main():
+    parser = argparse.ArgumentParser(description='Process some integers.')
+    parser.add_argument('-g','--get', action='store_true')
+    args=parser.parse_args()
+    db = SessionLocal()
+    controller(args, db)
 
 @app.get("/")
 def home(request: Request, db: Session = Depends(get_db)):
-    data = db.query(models.Weather_data).all()
-    
-    print(type(data), data)
-    # data=json.dumps(data)
+    data = db.query(models.Weather_data).order_by(models.Weather_data.id.desc()).limit(10)
 
     return templates.TemplateResponse("home.html", {
         "request": request,
         "data": data
     })
 
-# while True:
-#     db = SessionLocal()
-#     read_station_weather("ucy", db)
-#     time.sleep(60)
+@app.get("/station/{station_name}")
+def get_data_for_station(station_name, request: Request, db: Session = Depends(get_db)):
+    stations = get_stations()
+
+    data = db.query(models.Weather_data).order_by(models.Weather_data.id.desc()).filter_by(neighborhood = stations[station_name][1]).limit(10)
+
+    return templates.TemplateResponse("home.html", {
+        "request": request,
+        "data": data
+    })
+
+
+
+if __name__ == "__main__":
+    main()
